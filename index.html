@@ -3,27 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Image Cropper (1:1 Ratio)</title>
-  <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet"/>
+  <title>Crop & Download</title>
+  <link href="https://unpkg.com/cropperjs@1.6.1/dist/cropper.min.css" rel="stylesheet"/>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    img { max-width: 100%; display: block; margin: 10px 0; }
-    #preview { width: 300px; height: 300px; overflow: hidden; margin-top: 10px; }
-    canvas { display: none; }
+    img { max-width: 100%; display: block; margin: 20px 0; }
   </style>
 </head>
 <body>
 
-  <h2>Upload and Crop Image (1:1)</h2>
-  <input type="file" id="inputImage" accept="image/*" />
-  <br />
-  <img id="image" />
-  <button id="downloadBtn">Download Cropped Image</button>
+  <h2>Upload, Crop (1:1), and Download</h2>
+  <input type="file" id="inputImage" accept="image/*">
+  <img id="image" style="display:none;" />
+  <button id="downloadBtn" style="display:none;">Download Cropped Image</button>
 
-  <script src="https://unpkg.com/cropperjs"></script>
+  <script src="https://unpkg.com/cropperjs@1.6.1"></script>
   <script>
     const input = document.getElementById('inputImage');
     const image = document.getElementById('image');
+    const downloadBtn = document.getElementById('downloadBtn');
     let cropper;
 
     input.addEventListener('change', e => {
@@ -33,28 +31,31 @@
       const reader = new FileReader();
       reader.onload = () => {
         image.src = reader.result;
+        image.style.display = 'block';
+        downloadBtn.style.display = 'inline-block';
+
         if (cropper) cropper.destroy();
 
         cropper = new Cropper(image, {
           aspectRatio: 1,
-          viewMode: 1,
+          viewMode: 1
         });
       };
       reader.readAsDataURL(file);
     });
 
-    document.getElementById('downloadBtn').addEventListener('click', () => {
+    downloadBtn.addEventListener('click', () => {
       if (!cropper) return;
 
-      const canvas = cropper.getCroppedCanvas({
-        width: 300,
-        height: 300
-      });
-
-      const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png');
-      link.download = 'cropped-image.png';
-      link.click();
+      const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+      if (canvas) {
+        canvas.toBlob(blob => {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'cropped-image.png';
+          link.click();
+        });
+      }
     });
   </script>
 </body>
