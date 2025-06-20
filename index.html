@@ -3,19 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Crop & Download</title>
+  <title>Image Cropper (1:1 Ratio)</title>
   <link href="https://unpkg.com/cropperjs@1.6.1/dist/cropper.min.css" rel="stylesheet"/>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    img { max-width: 100%; display: block; margin: 20px 0; }
+    img { max-width: 100%; display: block; margin: 10px 0; }
   </style>
 </head>
 <body>
 
-  <h2>Upload, Crop (1:1), and Download</h2>
-  <input type="file" id="inputImage" accept="image/*">
-  <img id="image" style="display:none;" />
-  <button id="downloadBtn" style="display:none;">Download Cropped Image</button>
+  <h2>Upload and Crop Image (1:1)</h2>
+  <input type="file" id="inputImage" accept="image/*" />
+  <br />
+  <!-- Initially hide the image and download button -->
+  <img id="image" style="display: none;" />
+  <button id="downloadBtn" style="display: none;">Download Cropped Image</button>
 
   <script src="https://unpkg.com/cropperjs@1.6.1"></script>
   <script>
@@ -24,38 +26,46 @@
     const downloadBtn = document.getElementById('downloadBtn');
     let cropper;
 
+    // Handle image file selection
     input.addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = () => {
-        image.src = reader.result;
+      reader.onload = event => {
+        image.src = event.target.result;
         image.style.display = 'block';
-        downloadBtn.style.display = 'inline-block';
-
-        if (cropper) cropper.destroy();
-
-        cropper = new Cropper(image, {
-          aspectRatio: 1,
-          viewMode: 1
-        });
       };
       reader.readAsDataURL(file);
     });
 
+    // Wait for the image to load before initializing cropper
+    image.addEventListener('load', () => {
+      if (cropper) {
+        cropper.destroy();
+      }
+      cropper = new Cropper(image, {
+        aspectRatio: 1,
+        viewMode: 1
+      });
+
+      // Show download button once cropper is active
+      downloadBtn.style.display = 'inline-block';
+    });
+
+    // Handle the download button click
     downloadBtn.addEventListener('click', () => {
       if (!cropper) return;
 
       const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
-      if (canvas) {
-        canvas.toBlob(blob => {
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = 'cropped-image.png';
-          link.click();
-        });
-      }
+      canvas.toBlob(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'cropped-image.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
     });
   </script>
 </body>
